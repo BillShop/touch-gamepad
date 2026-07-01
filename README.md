@@ -3,6 +3,10 @@
 Overlay de **contrôles tactiles** (croix directionnelle + boutons style manette 90s) pour
 jeux web en paysage. **Zéro dépendance, sans build** — JavaScript vanilla (ES module) + CSS.
 
+![Aperçu de touch-gamepad](assets/demo.png)
+
+> **Démo en ligne : [billshop.github.io/touch-gamepad](https://billshop.github.io/touch-gamepad/)** — à ouvrir sur mobile en paysage.
+
 Par défaut, chaque contrôle **synthétise l'événement clavier** correspondant : un jeu déjà
 piloté au clavier devient jouable au tactile **sans modifier sa logique**.
 

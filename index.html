@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>touch-gamepad — démo</title>
+<link rel="stylesheet" href="./src/touch-gamepad.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background:
+    radial-gradient(120% 80% at 50% 12%, #12233a 0%, #0c1626 45%, #070c14 100%);
+    color: #cfe0f2; font-family: system-ui, sans-serif; }
+  .info { position: absolute; top: 2vh; left: 50%; transform: translateX(-50%); text-align: center; }
+  .info h1 { font-size: 2.4vh; font-weight: 600; letter-spacing: .5px; }
+  .info p { font-size: 1.7vh; color: #7f97b3; margin-top: 4px; }
+  .log { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 40vw; max-width: 420px; height: 44vh; overflow: hidden;
+    background: #0009; border: 1px solid #21344d; border-radius: 12px; padding: 12px 16px; }
+  .log h2 { font-size: 1.6vh; color: #6fd08a; margin-bottom: 6px; }
+  .log ul { list-style: none; font-size: 1.5vh; line-height: 1.7; font-family: ui-monospace, monospace; }
+  .log li.key { color: #f0b429; }
+</style>
+</head>
+<body>
+  <div class="info">
+    <h1>touch-gamepad — démo</h1>
+    <p>Appuie sur les contrôles (souris ou tactile). A = Tir · B = Saut</p>
+  </div>
+  <div class="log">
+    <h2>Entrées reçues</h2>
+    <ul id="log"></ul>
+  </div>
+
+  <script type="module">
+    import { createTouchGamepad } from './src/touch-gamepad.js';
+    const log = document.getElementById('log');
+    const line = (txt, cls) => {
+      const li = document.createElement('li');
+      li.textContent = txt; if (cls) li.className = cls;
+      log.prepend(li);
+      while (log.children.length > 12) log.lastChild.remove();
+    };
+
+    createTouchGamepad({
+      onlyOnTouch: false,                 // visible sur desktop pour tester à la souris
+      labels: { A: 'Tir', B: 'Saut' },
+      mapping: { A: 'Space', B: 'ArrowUp', X: null, Y: null },
+      onInput: (name, pressed) => line(`${pressed ? '▼' : '▲'} contrôle: ${name}`),
+    });
+
+    // Preuve du "drop-in clavier" : on écoute les événements synthétisés.
+    addEventListener('keydown', e => line(`  ↳ keydown ${e.code}`, 'key'));
+    addEventListener('keyup',   e => line(`  ↳ keyup ${e.code}`, 'key'));
+  </script>
+</body>
+</html>

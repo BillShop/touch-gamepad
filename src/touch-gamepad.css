@@ -1,0 +1,47 @@
+/* touch-gamepad.css — styles de l'overlay. Positions par défaut réglées pour un
+   jeu en paysage plein écran ; surchargeables (les valeurs vivent ici, pas en JS). */
+
+.tg-root {
+  position: fixed; inset: 0; z-index: 9999;
+  pointer-events: none;            /* laisse passer les clics ailleurs que sur les contrôles */
+  user-select: none; -webkit-user-select: none; touch-action: none;
+  font-family: "Trebuchet MS", system-ui, sans-serif;
+}
+.tg-root.tg-hidden { display: none; }
+.tg-root > * { pointer-events: auto; }
+
+/* SELECT / START */
+.tg-sys { position: absolute; top: 15vh; left: 3vw; display: flex; flex-direction: column; gap: 10px; }
+.tg-pill { position: relative; width: 15vh; padding: 0; border: 0; background: none; cursor: pointer; }
+.tg-pill img { width: 100%; display: block; }
+.tg-pill span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 1.9vh; font-weight: bold; color: #3a3a3a; letter-spacing: 1px; }
+.tg-start { transform: translateY(100%); }        /* START descendu d'une épaisseur */
+
+/* Croix directionnelle */
+.tg-dpad { position: absolute; bottom: 12.6vh; left: -0.4vw; width: 30vh; }
+.tg-dpad > img { width: 100%; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.tg-hit { position: absolute; width: 38%; height: 38%; }
+.tg-hit.tg-up { top: 0; left: 31%; } .tg-hit.tg-down { bottom: 0; left: 31%; }
+.tg-hit.tg-left { left: 0; top: 31%; } .tg-hit.tg-right { right: 0; top: 31%; }
+
+/* Boutons d'action X / Y / A / B (répartis également en hauteur) */
+.tg-faces { position: absolute; right: 3vw; top: 12.6vh; bottom: 12.6vh;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+.tg-btn { position: relative; width: 11vh; padding: 0; border: 0; background: none; cursor: pointer; transition: transform .05s; }
+.tg-btn img { width: 100%; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.tg-lbl { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 4vh; font-weight: bold; color: #fff; text-shadow: 0 2px 3px rgba(0,0,0,.5); }
+.tg-act { position: absolute; right: 108%; top: 50%; transform: translateY(-50%); white-space: nowrap;
+  font-size: 1.9vh; font-weight: bold; color: #ffd9a8; text-shadow: 0 1px 2px #000; }
+
+/* Retour visuel à l'appui */
+.tg-btn.tg-active { transform: scale(.92); }
+.tg-pill.tg-active span { color: #000; }
+.tg-hit.tg-active { background: rgba(255,255,255,.12); border-radius: 8px; }
+
+@media (orientation: portrait) {
+  .tg-root::after { content: "↻ Tourne l'appareil en paysage"; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    background: #000c; color: #f5f0e6; font-size: 1.1rem; pointer-events: auto; }
+}

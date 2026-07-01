@@ -52,6 +52,7 @@ sur `ShiftLeft`/`Enter`. Tout est surchargeable via `mapping`.
 | `onInput` | `null` | callback `(name, pressed)` |
 | `dpadDeadzone` | `0.22` | rayon mort au centre de la croix (fraction du rayon) |
 | `allowDiagonals` | `true` | autoriser deux directions simultanées sur la croix |
+| `dpadDiagonalWidth` | `30` | largeur d'un coin diagonal en degrés (plus petit = directions pures plus larges) |
 
 Retour : `{ el, setVisible(v), destroy() }`.
 

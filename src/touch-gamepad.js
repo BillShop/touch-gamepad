@@ -44,6 +44,8 @@ function codeToKey(code) {
  *   onInput         callback (name, pressed) à chaque appui/relâche
  *   dpadDeadzone    rayon mort au centre de la croix, en fraction du rayon (défaut 0.22)
  *   allowDiagonals  autoriser deux directions simultanées sur la croix (défaut true)
+ *   dpadDiagonalWidth  largeur angulaire d'un coin diagonal, en degrés (défaut 30) — plus
+ *                   petit = directions pures plus larges, diagonales plus difficiles à viser
  * @returns {{ el, setVisible(v), destroy() }}
  */
 export function createTouchGamepad(options = {}) {
@@ -58,6 +60,7 @@ export function createTouchGamepad(options = {}) {
     onInput = null,
     dpadDeadzone = 0.22,
     allowDiagonals = true,
+    dpadDiagonalWidth = 30,
   } = options;
 
   const map = { ...DEFAULTS, ...mapping };
@@ -126,27 +129,34 @@ export function createTouchGamepad(options = {}) {
     hits[dir] = z;
   }
 
-  // Directions actives pour un point donné (coordonnées client).
+  // Centres angulaires (0 = droite, 90 = bas, 180 = gauche, 270 = haut ; y vers le bas).
+  const CARDINALS = [
+    { c: 0, d: ['right'] }, { c: 90, d: ['down'] }, { c: 180, d: ['left'] }, { c: 270, d: ['up'] },
+  ];
+  const DIAGONALS = [
+    { c: 45, d: ['down', 'right'] }, { c: 135, d: ['down', 'left'] },
+    { c: 225, d: ['up', 'left'] }, { c: 315, d: ['up', 'right'] },
+  ];
+  const angDiff = (a, b) => { const d = Math.abs(a - b); return d > 180 ? 360 - d : d; };
+
+  // Directions actives pour un point donné (coordonnées client). Chaque coin diagonal
+  // occupe `dpadDiagonalWidth` degrés ; le reste va à la cardinale la plus proche → les
+  // directions pures sont plus larges (60° par défaut) que les diagonales (30°).
   function dpadDirs(clientX, clientY) {
     const r = dpad.getBoundingClientRect();
     const dx = clientX - (r.left + r.width / 2);
     const dy = clientY - (r.top + r.height / 2);
-    const dist = Math.hypot(dx, dy);
     const dead = (Math.min(r.width, r.height) / 2) * dpadDeadzone;
     const set = new Set();
-    if (dist < dead) return set;                     // zone morte : aucune direction
-    // Octant 0=droite,1=bas-droite,2=bas,3=bas-gauche,4=gauche,5=haut-gauche,6=haut,7=haut-droite
-    const a = (Math.atan2(dy, dx) * 180) / Math.PI;  // -180..180 (y vers le bas)
-    const oct = ((Math.round(a / 45) % 8) + 8) % 8;
-    const OCTANTS = [
-      ['right'], ['down', 'right'], ['down'], ['down', 'left'],
-      ['left'], ['up', 'left'], ['up'], ['up', 'right'],
-    ];
-    for (const d of OCTANTS[oct]) set.add(d);
-    if (!allowDiagonals && set.size > 1) {           // garder l'axe dominant
-      set.clear();
-      set.add(Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down'));
+    if (Math.hypot(dx, dy) < dead) return set;       // zone morte : aucune direction
+    let a = (Math.atan2(dy, dx) * 180) / Math.PI;    // -180..180
+    if (a < 0) a += 360;                             // 0..360
+    const half = allowDiagonals ? dpadDiagonalWidth / 2 : 0;
+    let dirs = DIAGONALS.find((g) => angDiff(a, g.c) <= half)?.d;   // dans un coin ?
+    if (!dirs) {                                                    // sinon cardinale la plus proche
+      dirs = CARDINALS.reduce((best, g) => (angDiff(a, g.c) < angDiff(a, best.c) ? g : best)).d;
     }
+    for (const d of dirs) set.add(d);
     return set;
   }
 

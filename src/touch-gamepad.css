@@ -36,6 +36,14 @@
 .tg-act { position: absolute; right: 108%; top: 50%; transform: translateY(-50%); white-space: nowrap;
   font-size: 1.9vh; font-weight: bold; color: #ffd9a8; text-shadow: 0 1px 2px #000; }
 
+/* Bouton plein écran (coin haut-droit) */
+.tg-fs { position: absolute; top: 2.5vh; right: 2.5vw; width: 5.5vh; height: 5.5vh;
+  display: flex; align-items: center; justify-content: center; padding: 0;
+  border: 1px solid rgba(255,255,255,.25); border-radius: 10px; background: rgba(0,0,0,.35);
+  color: #e8eef6; font-size: 3vh; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.tg-fs:active { background: rgba(255,255,255,.18); }
+.tg-fs.tg-fs-on { color: #7fd0ff; border-color: rgba(127,208,255,.5); }
+
 /* Retour visuel à l'appui */
 .tg-btn.tg-active { transform: scale(.92); }
 .tg-pill.tg-active span { color: #000; }

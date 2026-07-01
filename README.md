@@ -53,8 +53,14 @@ sur `ShiftLeft`/`Enter`. Tout est surchargeable via `mapping`.
 | `dpadDeadzone` | `0.22` | rayon mort au centre de la croix (fraction du rayon) |
 | `allowDiagonals` | `true` | autoriser deux directions simultanées sur la croix |
 | `dpadDiagonalWidth` | `30` | largeur d'un coin diagonal en degrés (plus petit = directions pures plus larges) |
+| `vibrate` | `12` | durée de vibration au toucher en ms (`0`/`false` pour désactiver) |
+| `fullscreenButton` | `true` | afficher le bouton plein écran (coin haut-droit) |
 
-Retour : `{ el, setVisible(v), destroy() }`.
+Retour : `{ el, setVisible(v), toggleFullscreen(), destroy() }`.
+
+Le bouton **plein écran** (coin haut-droit) passe l'hôte en `requestFullscreen()` et tente
+de **verrouiller l'orientation en paysage** (`screen.orientation.lock`, quand le navigateur
+le permet). La méthode `toggleFullscreen()` fait la même chose par programmation.
 
 ## Contrôles fournis
 
@@ -74,4 +80,4 @@ serve.py                serveur de dev no-cache (optionnel)
 
 ## Licence
 
-À définir.
+[MIT](LICENSE) © 2026 BillShop.

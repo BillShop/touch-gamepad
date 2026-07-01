@@ -46,7 +46,9 @@ function codeToKey(code) {
  *   allowDiagonals  autoriser deux directions simultanées sur la croix (défaut true)
  *   dpadDiagonalWidth  largeur angulaire d'un coin diagonal, en degrés (défaut 30) — plus
  *                   petit = directions pures plus larges, diagonales plus difficiles à viser
- * @returns {{ el, setVisible(v), destroy() }}
+ *   vibrate         durée de vibration au toucher en ms (défaut 12 ; 0/false pour désactiver)
+ *   fullscreenButton  afficher le bouton plein écran (défaut true)
+ * @returns {{ el, setVisible(v), toggleFullscreen(), destroy() }}
  */
 export function createTouchGamepad(options = {}) {
   const {
@@ -61,16 +63,20 @@ export function createTouchGamepad(options = {}) {
     dpadDeadzone = 0.22,
     allowDiagonals = true,
     dpadDiagonalWidth = 30,
+    vibrate = 12,
+    fullscreenButton = true,
   } = options;
 
   const map = { ...DEFAULTS, ...mapping };
   const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
   const pressed = new Set();
   const asset = (name) => `${assetsPath}${name}.png`;
+  const buzz = () => { if (vibrate && navigator.vibrate) { try { navigator.vibrate(vibrate); } catch { /* ok */ } } };
 
   function press(name) {
     if (pressed.has(name)) return;
     pressed.add(name);
+    buzz();
     const code = map[name];
     if (code && synthesizeKeyboard) {
       keyTarget.dispatchEvent(new KeyboardEvent('keydown', { code, key: codeToKey(code), bubbles: true, cancelable: true }));
@@ -201,7 +207,32 @@ export function createTouchGamepad(options = {}) {
     faces.appendChild(b);
   }
 
+  // Plein écran + verrou paysage. Cible l'hôte (ou <html> si monté sur body).
+  const fsTarget = mount === document.body ? document.documentElement : mount;
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await fsTarget.requestFullscreen();
+        try { await screen.orientation?.lock?.('landscape'); } catch { /* verrou non supporté */ }
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch { /* refusé (hors geste utilisateur, iframe…) */ }
+  }
+  let fsBtn = null;
+  const syncFsIcon = () => { if (fsBtn) fsBtn.classList.toggle('tg-fs-on', !!document.fullscreenElement); };
+  if (fullscreenButton && document.fullscreenEnabled) {
+    fsBtn = document.createElement('button');
+    fsBtn.type = 'button';
+    fsBtn.className = 'tg-fs';
+    fsBtn.setAttribute('aria-label', 'Basculer en plein écran');
+    fsBtn.innerHTML = '<span>⛶</span>';
+    fsBtn.addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', syncFsIcon);
+  }
+
   root.append(sys, dpad, faces);
+  if (fsBtn) root.appendChild(fsBtn);
   mount.appendChild(root);
 
   const releaseAll = () => {
@@ -214,6 +245,12 @@ export function createTouchGamepad(options = {}) {
   return {
     el: root,
     setVisible(v) { root.classList.toggle('tg-hidden', !v); },
-    destroy() { releaseAll(); window.removeEventListener('blur', releaseAll); root.remove(); },
+    toggleFullscreen,
+    destroy() {
+      releaseAll();
+      window.removeEventListener('blur', releaseAll);
+      document.removeEventListener('fullscreenchange', syncFsIcon);
+      root.remove();
+    },
   };
 }

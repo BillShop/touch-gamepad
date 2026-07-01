@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>touch-gamepad — mini-jeu « Ramasse » (drop-in clavier)</title>
+<link rel="stylesheet" href="../src/touch-gamepad.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #070c14; }
+  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+  .hud { position: absolute; top: 2vh; left: 50%; transform: translateX(-50%);
+    text-align: center; color: #cfe0f2; font-family: system-ui, sans-serif; pointer-events: none; }
+  .hud .score { font-size: 3.2vh; font-weight: 700; letter-spacing: .5px; }
+  .hud .hint { font-size: 1.6vh; color: #7f97b3; margin-top: 2px; }
+</style>
+</head>
+<body>
+  <canvas id="cv"></canvas>
+  <div class="hud">
+    <div class="score">Score : <span id="score">0</span></div>
+    <div class="hint">Flèches = déplacement (diagonales ✓) · A = dash · au clavier ou au tactile</div>
+  </div>
+
+  <!--
+    ═══════════════════════════════════════════════════════════════════════════
+    LE JEU N'ÉCOUTE QUE LE CLAVIER (keydown / keyup). Aucune ligne de code tactile.
+    touch-gamepad, monté tout en bas, synthétise ces mêmes événements clavier →
+    le jeu devient jouable au doigt SANS QU'UNE SEULE LIGNE DE SA LOGIQUE CHANGE.
+    ═══════════════════════════════════════════════════════════════════════════
+  -->
+  <script>
+    const cv = document.getElementById('cv');
+    const ctx = cv.getContext('2d');
+    let W, H;
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = cv.clientWidth; H = cv.clientHeight;
+      cv.width = W * dpr; cv.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    window.addEventListener('resize', resize); resize();
+
+    // --- Entrées : UNIQUEMENT le clavier ---------------------------------------
+    const keys = new Set();
+    addEventListener('keydown', (e) => { keys.add(e.code); });
+    addEventListener('keyup',   (e) => { keys.delete(e.code); });
+
+    // --- État du jeu -----------------------------------------------------------
+    const player = { x: 0, y: 0, r: 18, speed: 340 };
+    const reset = () => { player.x = W / 2; player.y = H / 2; };
+    reset();
+
+    let score = 0;
+    const scoreEl = document.getElementById('score');
+    const coin = { x: 0, y: 0, r: 12 };
+    const spawnCoin = () => {
+      const m = 60;
+      coin.x = m + Math.random() * (W - 2 * m);
+      coin.y = m + Math.random() * (H - 2 * m);
+    };
+    spawnCoin();
+
+    // Dash déclenché par A (Space), avec petit temps de recharge.
+    let dashUntil = 0, dashReadyAt = 0;
+    const now = () => performance.now();
+
+    // --- Boucle ----------------------------------------------------------------
+    let last = now();
+    function frame() {
+      const t = now();
+      const dt = Math.min((t - last) / 1000, 0.05);
+      last = t;
+
+      // Vecteur de déplacement d'après les flèches (diagonales naturelles).
+      let dx = (keys.has('ArrowRight') ? 1 : 0) - (keys.has('ArrowLeft') ? 1 : 0);
+      let dy = (keys.has('ArrowDown')  ? 1 : 0) - (keys.has('ArrowUp')   ? 1 : 0);
+      if (dx && dy) { const inv = 1 / Math.SQRT2; dx *= inv; dy *= inv; }
+
+      if (keys.has('Space') && t >= dashReadyAt) { dashUntil = t + 160; dashReadyAt = t + 700; }
+      const speed = player.speed * (t < dashUntil ? 2.6 : 1);
+
+      player.x = Math.max(player.r, Math.min(W - player.r, player.x + dx * speed * dt));
+      player.y = Math.max(player.r, Math.min(H - player.r, player.y + dy * speed * dt));
+
+      // Ramassage.
+      if (Math.hypot(player.x - coin.x, player.y - coin.y) < player.r + coin.r) {
+        score++; scoreEl.textContent = score; spawnCoin();
+      }
+
+      // Rendu.
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#0c1626'; ctx.fillRect(0, 0, W, H);
+
+      ctx.beginPath(); ctx.arc(coin.x, coin.y, coin.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#f0b429'; ctx.fill();
+
+      const dashing = t < dashUntil;
+      ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
+      ctx.fillStyle = dashing ? '#7fd0ff' : '#6fd08a'; ctx.fill();
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+
+  <!-- Drop-in tactile : on ajoute simplement la manette. Le jeu, lui, n'a pas bougé. -->
+  <script type="module">
+    import { createTouchGamepad } from '../src/touch-gamepad.js';
+    createTouchGamepad({
+      onlyOnTouch: false,               // visible aussi au desktop pour tester à la souris
+      labels: { A: 'Dash' },
+      mapping: { A: 'Space', B: null, X: null, Y: null },
+    });
+  </script>
+</body>
+</html>

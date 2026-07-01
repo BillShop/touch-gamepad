@@ -23,6 +23,14 @@ python serve.py         # puis ouvrir http://localhost:8000 (mode paysage)
 La démo (`index.html`) affiche la manette et journalise en direct les entrées reçues
 ainsi que les événements clavier synthétisés.
 
+### Mini-jeu : la preuve du « drop-in clavier »
+
+[`examples/collect.html`](examples/collect.html) ([en ligne](https://billshop.github.io/touch-gamepad/examples/collect.html))
+est un petit jeu qui **n'écoute que le clavier** (`keydown`/`keyup`, zéro code tactile) :
+on déplace un pion aux flèches (diagonales comprises) et `A` déclenche un dash. On monte
+simplement `touch-gamepad` par-dessus, et le jeu devient jouable au doigt **sans qu'une
+seule ligne de sa logique ne change**.
+
 ## Utilisation
 
 ```html
@@ -77,9 +85,10 @@ réglé pour un jeu paysage plein écran, à surcharger selon le projet.
 
 ```
 index.html              démo + banc d'essai
+examples/collect.html   mini-jeu clavier + manette (preuve du drop-in)
 src/touch-gamepad.js    la librairie
 src/touch-gamepad.css   styles / layout par défaut
-assets/                 boutons (croix, X/Y/A/B, pastille)
+assets/                 boutons (croix, X/Y/A/B, pastille) + capture
 serve.py                serveur de dev no-cache (optionnel)
 ```
 

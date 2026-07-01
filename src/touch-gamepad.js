@@ -46,8 +46,9 @@ function codeToKey(code) {
  *   allowDiagonals  autoriser deux directions simultanées sur la croix (défaut true)
  *   dpadDiagonalWidth  largeur angulaire d'un coin diagonal, en degrés (défaut 30) — plus
  *                   petit = directions pures plus larges, diagonales plus difficiles à viser
- *   vibrate         durée de vibration au toucher en ms (défaut 12 ; 0/false pour désactiver)
+ *   vibrate         durée de vibration au toucher en ms (défaut 20 ; 0/false pour désactiver)
  *   fullscreenButton  afficher le bouton plein écran (défaut true)
+ *   lockScroll      neutraliser pull-to-refresh + scroll/zoom de la page tant que monté (défaut true)
  * @returns {{ el, setVisible(v), toggleFullscreen(), destroy() }}
  */
 export function createTouchGamepad(options = {}) {
@@ -65,6 +66,7 @@ export function createTouchGamepad(options = {}) {
     dpadDiagonalWidth = 30,
     vibrate = 20,
     fullscreenButton = true,
+    lockScroll = true,
   } = options;
 
   const map = { ...DEFAULTS, ...mapping };
@@ -231,6 +233,17 @@ export function createTouchGamepad(options = {}) {
     document.addEventListener('fullscreenchange', syncFsIcon);
   }
 
+  // Neutralise pull-to-refresh (overscroll-behavior) et scroll/zoom de page (touch-action)
+  // pendant le jeu ; restauré à destroy(). Le viewport meta gère le pinch-zoom côté page.
+  let restoreScroll = null;
+  if (lockScroll) {
+    const de = document.documentElement;
+    const prev = { over: de.style.overscrollBehavior, ta: de.style.touchAction };
+    de.style.overscrollBehavior = 'none';
+    de.style.touchAction = 'none';
+    restoreScroll = () => { de.style.overscrollBehavior = prev.over; de.style.touchAction = prev.ta; };
+  }
+
   root.append(sys, dpad, faces);
   if (fsBtn) root.appendChild(fsBtn);
   mount.appendChild(root);
@@ -250,6 +263,7 @@ export function createTouchGamepad(options = {}) {
       releaseAll();
       window.removeEventListener('blur', releaseAll);
       document.removeEventListener('fullscreenchange', syncFsIcon);
+      if (restoreScroll) restoreScroll();
       root.remove();
     },
   };

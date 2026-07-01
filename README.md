@@ -59,6 +59,7 @@ sur `ShiftLeft`/`Enter`. Tout est surchargeable via `mapping`.
 | `dpadDiagonalWidth` | `30` | largeur d'un coin diagonal en degrés (plus petit = directions pures plus larges) |
 | `vibrate` | `20` | durée de vibration au toucher en ms (`0`/`false` pour désactiver) |
 | `fullscreenButton` | `true` | afficher le bouton plein écran (coin haut-droit) |
+| `lockScroll` | `true` | neutraliser pull-to-refresh + scroll/zoom de la page tant que monté |
 
 Retour : `{ el, setVisible(v), toggleFullscreen(), destroy() }`.
 

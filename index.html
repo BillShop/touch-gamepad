@@ -25,6 +25,9 @@
   <div class="info">
     <h1>touch-gamepad — démo</h1>
     <p>Appuie sur les contrôles (souris ou tactile). A = Tir · B = Saut</p>
+    <p id="vibe-status" style="margin-top:6px;"></p>
+    <button id="vibe-test" style="margin-top:6px; padding:6px 12px; font-size:1.5vh; border-radius:8px;
+      border:1px solid #345; background:#122238; color:#cfe0f2; cursor:pointer;">Tester la vibration</button>
   </div>
   <div class="log">
     <h2>Entrées reçues</h2>
@@ -51,6 +54,19 @@
     // Preuve du "drop-in clavier" : on écoute les événements synthétisés.
     addEventListener('keydown', e => line(`  ↳ keydown ${e.code}`, 'key'));
     addEventListener('keyup',   e => line(`  ↳ keyup ${e.code}`, 'key'));
+
+    // Diagnostic vibration : indique le support et permet un test direct sur l'appareil.
+    const supported = typeof navigator.vibrate === 'function';
+    const status = document.getElementById('vibe-status');
+    status.textContent = supported
+      ? '✔ Vibration supportée par ce navigateur'
+      : '✘ Vibration NON supportée (typique d’iOS/iPhone/iPad)';
+    status.style.color = supported ? '#6fd08a' : '#e2708a';
+    document.getElementById('vibe-test').addEventListener('click', () => {
+      const ok = supported && navigator.vibrate(200);   // 200 ms bien perceptible pour le test
+      line(supported ? `test vibration → ${ok ? 'envoyée (200ms)' : 'refusée par le navigateur'}`
+                     : 'test vibration → API absente', 'key');
+    });
   </script>
 </body>
 </html>

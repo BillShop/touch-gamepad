@@ -53,7 +53,7 @@ sur `ShiftLeft`/`Enter`. Tout est surchargeable via `mapping`.
 | `dpadDeadzone` | `0.22` | rayon mort au centre de la croix (fraction du rayon) |
 | `allowDiagonals` | `true` | autoriser deux directions simultanées sur la croix |
 | `dpadDiagonalWidth` | `30` | largeur d'un coin diagonal en degrés (plus petit = directions pures plus larges) |
-| `vibrate` | `12` | durée de vibration au toucher en ms (`0`/`false` pour désactiver) |
+| `vibrate` | `20` | durée de vibration au toucher en ms (`0`/`false` pour désactiver) |
 | `fullscreenButton` | `true` | afficher le bouton plein écran (coin haut-droit) |
 
 Retour : `{ el, setVisible(v), toggleFullscreen(), destroy() }`.

@@ -63,7 +63,7 @@ export function createTouchGamepad(options = {}) {
     dpadDeadzone = 0.22,
     allowDiagonals = true,
     dpadDiagonalWidth = 30,
-    vibrate = 12,
+    vibrate = 20,
     fullscreenButton = true,
   } = options;
 

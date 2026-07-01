@@ -6,6 +6,10 @@ jeux web en paysage. **Zéro dépendance, sans build** — JavaScript vanilla (E
 Par défaut, chaque contrôle **synthétise l'événement clavier** correspondant : un jeu déjà
 piloté au clavier devient jouable au tactile **sans modifier sa logique**.
 
+La croix se pilote **au glissé** (le doigt passe d'une direction à l'autre sans relâcher)
+et gère les **diagonales**. Tout est **multi-touch** : plusieurs doigts simultanés
+(ex. une diagonale + deux boutons d'action) fonctionnent indépendamment.
+
 ## Aperçu
 
 ```
@@ -46,14 +50,16 @@ sur `ShiftLeft`/`Enter`. Tout est surchargeable via `mapping`.
 | `synthesizeKeyboard` | `true` | émettre `keydown`/`keyup` |
 | `keyTarget` | `window` | cible des événements clavier |
 | `onInput` | `null` | callback `(name, pressed)` |
+| `dpadDeadzone` | `0.22` | rayon mort au centre de la croix (fraction du rayon) |
+| `allowDiagonals` | `true` | autoriser deux directions simultanées sur la croix |
 
 Retour : `{ el, setVisible(v), destroy() }`.
 
 ## Contrôles fournis
 
-Croix directionnelle · 4 boutons d'action **X / Y / A / B** · **SELECT** / **START**.
-Le layout (positions/tailles) vit dans `src/touch-gamepad.css` — réglé pour un jeu
-paysage plein écran, à surcharger selon le projet.
+Croix directionnelle (glissé + diagonales) · 4 boutons d'action **X / Y / A / B** ·
+**SELECT** / **START**. Le layout (positions/tailles) vit dans `src/touch-gamepad.css` —
+réglé pour un jeu paysage plein écran, à surcharger selon le projet.
 
 ## Structure
 

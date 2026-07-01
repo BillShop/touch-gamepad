@@ -2,6 +2,10 @@
 // Zéro dépendance, sans build (ES module). Par défaut, chaque contrôle SYNTHÉTISE
 // l'événement clavier correspondant → un jeu piloté au clavier fonctionne sans le modifier.
 //
+// La croix directionnelle se pilote au glissé (le doigt peut passer d'une direction à
+// l'autre sans relâcher) et gère les DIAGONALES. Tout est multi-touch : plusieurs doigts
+// simultanés (ex. une diagonale + deux boutons d'action) fonctionnent.
+//
 // Usage minimal :
 //   import { createTouchGamepad } from './src/touch-gamepad.js';
 //   const pad = createTouchGamepad({ mapping: { A: 'Space', B: 'ArrowUp' }, labels: { A: 'Tir', B: 'Saut' } });
@@ -38,6 +42,8 @@ function codeToKey(code) {
  *   synthesizeKeyboard  émettre keydown/keyup (défaut true) — drop-in clavier
  *   keyTarget       cible des événements clavier (défaut window)
  *   onInput         callback (name, pressed) à chaque appui/relâche
+ *   dpadDeadzone    rayon mort au centre de la croix, en fraction du rayon (défaut 0.22)
+ *   allowDiagonals  autoriser deux directions simultanées sur la croix (défaut true)
  * @returns {{ el, setVisible(v), destroy() }}
  */
 export function createTouchGamepad(options = {}) {
@@ -50,6 +56,8 @@ export function createTouchGamepad(options = {}) {
     synthesizeKeyboard = true,
     keyTarget = window,
     onInput = null,
+    dpadDeadzone = 0.22,
+    allowDiagonals = true,
   } = options;
 
   const map = { ...DEFAULTS, ...mapping };
@@ -103,15 +111,73 @@ export function createTouchGamepad(options = {}) {
     sys.appendChild(b);
   }
 
+  // Croix directionnelle : surface unique pilotée au glissé + multi-touch.
+  // On calcule la/les direction(s) selon l'angle du doigt autour du centre
+  // (8 secteurs → 4 axes + 4 diagonales), avec une zone morte centrale.
+  const DIRS = ['up', 'down', 'left', 'right'];
   const dpad = document.createElement('div');
   dpad.className = 'tg-dpad';
   dpad.innerHTML = `<img src="${asset('dpad')}" alt="croix directionnelle">`;
-  for (const dir of ['up', 'down', 'left', 'right']) {
+  const hits = {};
+  for (const dir of DIRS) {
     const z = document.createElement('div');
-    z.className = `tg-hit tg-${dir}`;
-    bind(z, dir);
+    z.className = `tg-hit tg-${dir}`;   // purement visuel : ne capte plus les pointeurs
     dpad.appendChild(z);
+    hits[dir] = z;
   }
+
+  // Directions actives pour un point donné (coordonnées client).
+  function dpadDirs(clientX, clientY) {
+    const r = dpad.getBoundingClientRect();
+    const dx = clientX - (r.left + r.width / 2);
+    const dy = clientY - (r.top + r.height / 2);
+    const dist = Math.hypot(dx, dy);
+    const dead = (Math.min(r.width, r.height) / 2) * dpadDeadzone;
+    const set = new Set();
+    if (dist < dead) return set;                     // zone morte : aucune direction
+    // Octant 0=droite,1=bas-droite,2=bas,3=bas-gauche,4=gauche,5=haut-gauche,6=haut,7=haut-droite
+    const a = (Math.atan2(dy, dx) * 180) / Math.PI;  // -180..180 (y vers le bas)
+    const oct = ((Math.round(a / 45) % 8) + 8) % 8;
+    const OCTANTS = [
+      ['right'], ['down', 'right'], ['down'], ['down', 'left'],
+      ['left'], ['up', 'left'], ['up'], ['up', 'right'],
+    ];
+    for (const d of OCTANTS[oct]) set.add(d);
+    if (!allowDiagonals && set.size > 1) {           // garder l'axe dominant
+      set.clear();
+      set.add(Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down'));
+    }
+    return set;
+  }
+
+  // Suivi par pointeur → union des directions tenues par tous les doigts sur la croix.
+  const dpadPointers = new Map();  // pointerId → Set<dir>
+  function syncDpad() {
+    const union = new Set();
+    for (const s of dpadPointers.values()) for (const d of s) union.add(d);
+    for (const dir of DIRS) {
+      const on = union.has(dir);
+      hits[dir].classList.toggle('tg-active', on);
+      if (on) press(dir); else release(dir);
+    }
+  }
+  dpad.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    try { dpad.setPointerCapture(e.pointerId); } catch { /* ok */ }
+    dpadPointers.set(e.pointerId, dpadDirs(e.clientX, e.clientY));
+    syncDpad();
+  });
+  dpad.addEventListener('pointermove', (e) => {
+    if (!dpadPointers.has(e.pointerId)) return;
+    dpadPointers.set(e.pointerId, dpadDirs(e.clientX, e.clientY));
+    syncDpad();
+  });
+  const dpadUp = (e) => {
+    if (!dpadPointers.delete(e.pointerId)) return;
+    syncDpad();
+  };
+  dpad.addEventListener('pointerup', dpadUp);
+  dpad.addEventListener('pointercancel', dpadUp);
 
   const faces = document.createElement('div');
   faces.className = 'tg-faces';
@@ -128,7 +194,11 @@ export function createTouchGamepad(options = {}) {
   root.append(sys, dpad, faces);
   mount.appendChild(root);
 
-  const releaseAll = () => { for (const n of [...pressed]) release(n); };
+  const releaseAll = () => {
+    dpadPointers.clear();
+    for (const dir of DIRS) hits[dir].classList.remove('tg-active');
+    for (const n of [...pressed]) release(n);
+  };
   window.addEventListener('blur', releaseAll);
 
   return {

@@ -18,10 +18,11 @@
   font-size: 1.9vh; font-weight: bold; color: #3a3a3a; letter-spacing: 1px; }
 .tg-start { transform: translateY(100%); }        /* START descendu d'une épaisseur */
 
-/* Croix directionnelle */
-.tg-dpad { position: absolute; bottom: 12.6vh; left: -0.4vw; width: 30vh; }
-.tg-dpad > img { width: 100%; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
-.tg-hit { position: absolute; width: 38%; height: 38%; }
+/* Croix directionnelle — surface unique (glissé + diagonales + multi-touch).
+   Les .tg-hit ne servent plus qu'au retour visuel : elles ne captent pas les pointeurs. */
+.tg-dpad { position: absolute; bottom: 12.6vh; left: -0.4vw; width: 30vh; touch-action: none; }
+.tg-dpad > img { width: 100%; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); pointer-events: none; }
+.tg-hit { position: absolute; width: 38%; height: 38%; pointer-events: none; }
 .tg-hit.tg-up { top: 0; left: 31%; } .tg-hit.tg-down { bottom: 0; left: 31%; }
 .tg-hit.tg-left { left: 0; top: 31%; } .tg-hit.tg-right { right: 0; top: 31%; }
 

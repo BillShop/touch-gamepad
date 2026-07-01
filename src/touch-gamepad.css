@@ -11,12 +11,12 @@
 .tg-root > * { pointer-events: auto; }
 
 /* SELECT / START */
-.tg-sys { position: absolute; top: 15vh; left: 3vw; display: flex; flex-direction: column; gap: 10px; }
+.tg-sys { position: absolute; top: 7.5vh; left: 3vw; display: flex; flex-direction: column; gap: 7.5px; }
 .tg-pill { position: relative; width: 15vh; padding: 0; border: 0; background: none; cursor: pointer; }
 .tg-pill img { width: 100%; display: block; }
 .tg-pill span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-size: 1.9vh; font-weight: bold; color: #3a3a3a; letter-spacing: 1px; }
-.tg-start { transform: translateY(100%); }        /* START descendu d'une épaisseur */
+.tg-start { transform: translateY(75%); }          /* START descendu de 0,75 épaisseur */
 
 /* Croix directionnelle — surface unique (glissé + diagonales + multi-touch).
    Les .tg-hit ne servent plus qu'au retour visuel : elles ne captent pas les pointeurs. */
